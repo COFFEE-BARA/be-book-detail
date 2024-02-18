@@ -1,0 +1,11 @@
+{
+  "pathParameters": {
+    "isbn": "9791140708116"
+  },
+  "queryStringParameters": null,
+  "headers": null,
+  "multiValueHeaders": null,
+  "requestContext": null,
+  "body": null,
+  "isBase64Encoded": false
+}
