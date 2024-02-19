@@ -118,6 +118,14 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	INDEX_NAME := os.Getenv("INDEX_NAME")
 	FIELD_NAME := os.Getenv("FIELD_NAME")
 
+	// Set CORS headers
+	headers := map[string]string{
+		"Access-Control-Allow-Origin":  "*", // Allow requests from any origin
+		"Access-Control-Allow-Headers": "Content-Type",
+		"Access-Control-Allow-Methods": "*", // Allow all methods
+		// Add more CORS headers if needed
+	}
+
 	// 1. url path paramether로 isbn 값 받아오기
 	isbn, ok := request.PathParameters["isbn"]
 	if !ok {
@@ -127,12 +135,13 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			Data:    nil,
 		})
 		if err != nil {
-			return events.APIGatewayProxyResponse{StatusCode: 500}, err
+			return events.APIGatewayProxyResponse{StatusCode: 500, Headers: headers}, err
 		}
 
 		// Return the response
 		return events.APIGatewayProxyResponse{
 			StatusCode: 400,
+			Headers:    headers,
 			Body:       string(bodyJSON),
 		}, nil
 	}
@@ -142,14 +151,14 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	esClient, err := connectElasticSearch(CLOUD_ID, API_KEY)
 	if err != nil {
 		fmt.Println("Error connecting to Elasticsearch:", err)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500, Headers: headers}, err
 	}
 
 	//3. isbn 값으로 검색하기
 	res, err := searchIndex(esClient, INDEX_NAME, FIELD_NAME, isbn)
 	if err != nil {
 		fmt.Println("인덱스 검색 중 오류 발생:", err)
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500, Headers: headers}, err
 	}
 
 	//4. 검색결과 파싱하여 response
@@ -167,6 +176,7 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 		// Return the response
 		return events.APIGatewayProxyResponse{
 			StatusCode: 404,
+			Headers:    headers,
 			Body:       string(bodyJSON),
 		}, nil
 	}
@@ -191,11 +201,12 @@ func handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	})
 
 	if err != nil {
-		return events.APIGatewayProxyResponse{StatusCode: 500}, err
+		return events.APIGatewayProxyResponse{StatusCode: 500, Headers: headers}, err
 	}
 
 	return events.APIGatewayProxyResponse{
 		StatusCode: 200,
+		Headers:    headers,
 		Body:       string(bodyJSON),
 	}, nil
 
